@@ -1,10 +1,15 @@
-from django.urls import re_path,path
-from . import consumers
+#配置routing,让其处理websocket
 
-#将所有的websocket连接交给consumers.py去处理
+from django.urls import path
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.sessions import SessionMiddlewareStack
+import chat.routing
 
-websocket_urlpatterns = [
-    #userone是你自己的id,usertwo是你想私聊的人的id
-    re_path(r'ws/chat/(?P<usertwo_id>\w+)$', consumers.ChatConsumer),
-    re_path(r'ws/chat',consumers.PushConsumer)
-]
+application = ProtocolTypeRouter({
+    'websocket':SessionMiddlewareStack(  #用了这个中间件才可以在ws中使用session
+        URLRouter(
+                chat.routing.websocket_urlpatterns  #相当于urls.py的作用，给这个websocket请求相应的Consumer处理
+            )
+        )
+
+    })
